@@ -1,28 +1,59 @@
+
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'mdyaseenh/go-web-app'
+        DOCKER_TAG = 'v1'
+    }
+
     stages {
+
+        stage('Welcome') {
+            steps {
+                echo 'Welcome to Go Web App CI/CD!'
+            }
+        }
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/yaseencodez/go-web-app.git'
+                echo 'Source code checked out from GitHub.'
+            }
+        }
+
+        stage('Check Go') {
+            steps {
+                sh 'go version'
             }
         }
 
         stage('Build Go Application') {
             steps {
-                echo 'Building Go application'
-                sh 'go version'
-                sh 'go build -o main .'
+                sh 'go build -o app .'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Version') {
             steps {
-                echo 'Building Docker image'
-                sh 'docker build -t mdyaseenh/go-web-app:v2 .'
+                sh 'docker --version'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
             }
         }
     }
+
+    post {
+        success {
+            echo 'CI Pipeline completed successfully!'
+        }
+
+        failure {
+            echo 'CI Pipeline failed. Check Console Output.'
+        }
+    }
 }
+
