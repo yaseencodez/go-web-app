@@ -44,15 +44,39 @@ pipeline {
                 sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
             }
         }
+
+        stage('Docker Login and Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            --username "$DOCKER_USERNAME" \
+                            --password-stdin
+
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                        docker logout
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'CI Pipeline completed successfully!'
+            echo 'SUCCESS: Go application built and Docker image pushed to Docker Hub!'
         }
 
         failure {
-            echo 'CI Pipeline failed. Check Console Output.'
+            echo 'FAILURE: Pipeline failed. Check Console Output.'
+        }
+
+        always {
+            echo 'Jenkins pipeline execution completed.'
         }
     }
 }
